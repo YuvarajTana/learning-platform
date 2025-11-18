@@ -1,0 +1,30 @@
+# Core FastAPI dependencies
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic[email]==2.10.3
+pydantic-settings==2.6.1
+
+# Database
+sqlalchemy==2.0.36
+alembic==1.13.2
+# PostgreSQL driver - Optional (only needed if using PostgreSQL)
+# psycopg2-binary doesn't support Python 3.13 yet
+# Use psycopg3 for Python 3.13: pip install psycopg[binary]
+# psycopg[binary]==3.2.3
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.12
+
+# Utilities
+python-dotenv==1.0.1
+
+# Optional dependencies (comment out if not needed)
+# Redis - Optional, for caching
+redis==5.2.0
+
+# Docker - Optional, for code execution
+docker==7.1.0
+

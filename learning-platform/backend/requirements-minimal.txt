@@ -1,0 +1,22 @@
+# Minimal requirements for development (SQLite only, no optional dependencies)
+# Use this if you're having issues with optional packages
+
+# Core FastAPI dependencies
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic[email]==2.10.3
+pydantic-settings==2.6.1
+
+# Database (SQLite - built into Python)
+sqlalchemy==2.0.36
+alembic==1.13.2
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.12
+
+# Utilities
+python-dotenv==1.0.1
+

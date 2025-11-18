@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  # Python code executor
+  python-executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.executor
+    image: learning-platform-python-executor:latest
+    container_name: python-executor
+    restart: "no"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - none
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=10m
+    mem_limit: 128m
+    cpus: 0.5
+
+networks:
+  none:
+    driver: bridge
+    internal: true
+
