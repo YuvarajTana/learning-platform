@@ -7,13 +7,9 @@ from app.core.security import verify_password, get_password_hash, create_access_
 from app.core.config import settings
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse, Token
-import time
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
-
-# Simple in-memory token cache to reduce DB queries (60-second TTL)
-_token_cache = {}
 
 
 def get_user_by_username(db: Session, username: str):
@@ -40,7 +36,7 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
-    """Get current authenticated user with token caching"""
+    """Get current authenticated user"""
     from app.core.security import decode_access_token
     from jose import JWTError
     
@@ -49,13 +45,6 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
-    # Check token cache (60 second TTL) to reduce DB lookups
-    cache_key = f"token:{token[:20]}"
-    if cache_key in _token_cache:
-        cached_user, timestamp = _token_cache[cache_key]
-        if time.time() - timestamp < 60:
-            return cached_user
     
     payload = decode_access_token(token)
     if payload is None:
@@ -68,14 +57,6 @@ async def get_current_user(
     user = get_user_by_username(db, username=username)
     if user is None:
         raise credentials_exception
-    
-    # Cache the user to avoid DB lookups within 60 seconds
-    _token_cache[cache_key] = (user, time.time())
-    # Cleanup old cache entries (keep last 100)
-    if len(_token_cache) > 100:
-        oldest_key = min(_token_cache.keys(), key=lambda k: _token_cache[k][1])
-        del _token_cache[oldest_key]
-    
     return user
 
 

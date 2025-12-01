@@ -28,10 +28,9 @@ class Settings(BaseSettings):
     DOCKER_IMAGE: str = "python:3.11-slim"
     CODE_EXECUTION_TIMEOUT: int = 30
     
-    # Redis (optional, highly recommended for caching)
+    # Redis (optional)
     REDIS_URL: str = "redis://localhost:6379"
-    USE_REDIS: bool = True  # Enable caching for better performance
-    CACHE_TTL: int = 300  # Cache time-to-live in seconds (5 minutes)
+    USE_REDIS: bool = False
     
     class Config:
         env_file = ".env"

@@ -16,11 +16,7 @@ def get_user_progress(
     db: Session = Depends(get_db)
 ):
     """Get all progress for current user"""
-    # Optimized query: eager load relationships to prevent N+1 problem
-    from sqlalchemy.orm import joinedload
-    progress_list = db.query(UserProgress).options(
-        joinedload(UserProgress.project)
-    ).filter(
+    progress_list = db.query(UserProgress).filter(
         UserProgress.user_id == current_user.id
     ).all()
     return progress_list

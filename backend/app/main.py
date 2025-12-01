@@ -3,14 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1 import auth, projects, progress, code
 
-# Attempt to import rate limiting (optional dependency)
-try:
-    from slowapi import Limiter
-    from slowapi.util import get_remote_address
-    HAS_RATE_LIMITING = True
-except ImportError:
-    HAS_RATE_LIMITING = False
-
 # Create FastAPI app
 app = FastAPI(
     title="Learning Platform API",
@@ -19,11 +11,6 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc"
 )
-
-# Add rate limiting middleware if available (prevents abuse)
-if HAS_RATE_LIMITING:
-    limiter = Limiter(key_func=get_remote_address)
-    app.state.limiter = limiter
 
 # CORS middleware
 app.add_middleware(

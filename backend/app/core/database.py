@@ -3,14 +3,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
-# Create database engine with connection pooling
+# Create database engine
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {},
-    pool_size=10,  # Number of connections to keep open
-    max_overflow=20,  # Additional connections above pool_size
-    pool_recycle=3600,  # Recycle connections after 1 hour
-    pool_pre_ping=True,  # Test connections before using (prevents stale connection errors)
+    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
 )
 
 # Create session factory

@@ -20,13 +20,10 @@ python-multipart==0.0.12
 # Utilities
 python-dotenv==1.0.1
 
-# Optional dependencies (highly recommended for production)
-# Redis - For distributed caching (significant performance improvement)
+# Optional dependencies (comment out if not needed)
+# Redis - Optional, for caching
 redis==5.2.0
 
-# Rate limiting - Protects against abuse and DDoS
-slowapi==0.1.9
-
-# Docker - Optional, for code execution sandboxing
+# Docker - Optional, for code execution
 docker==7.1.0
 
