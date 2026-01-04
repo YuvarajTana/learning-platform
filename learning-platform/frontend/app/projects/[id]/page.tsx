@@ -8,6 +8,8 @@ import { projectsAPI, progressAPI } from '@/lib/api'
 import CodeSample from '@/components/CodeSample'
 import FlowDiagram from '@/components/FlowDiagram'
 import ArchitectureDiagram from '@/components/ArchitectureDiagram'
+import SetupInstructions from '@/components/SetupInstructions'
+import InteractiveExplanation from '@/components/InteractiveExplanation'
 import { projectCodeData } from '@/lib/projectCodeSamples'
 
 interface Project {
@@ -222,69 +224,98 @@ export default function ProjectDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto p-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-6"
-        >
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-r from-primary-600 via-blue-600 to-purple-600 text-white">
+        <div className="max-w-5xl mx-auto px-8 py-12">
           <Link
             href="/projects"
-            className="text-primary-600 hover:text-primary-700 text-sm font-medium mb-4 inline-block transition-colors"
+            className="inline-flex items-center gap-2 text-white/90 hover:text-white text-sm font-medium mb-6 transition-colors"
           >
-            ← Back to Projects
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to All Projects
           </Link>
-          
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <motion.span
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="text-sm font-semibold text-primary-600"
-                >
-                  Project {project.project_number}
-                </motion.span>
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className={`text-xs px-2 py-1 rounded ${getDifficultyColor(project.difficulty)}`}
-                >
-                  {project.difficulty}
-                </motion.span>
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className={`text-xs px-2 py-1 rounded border ${getPhaseColor(project.phase)}`}
-                >
-                  {project.phase}
-                </motion.span>
-              </div>
-              <motion.h1
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-lg rounded-full text-sm font-semibold border border-white/30"
+              >
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                Project {project.project_number}
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-4xl font-bold mb-2"
+                className="px-3 py-1.5 bg-white/90 text-primary-700 rounded-full text-xs font-bold uppercase tracking-wide"
               >
-                {project.title}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
+                {project.difficulty}
+              </motion.span>
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-xl text-gray-600"
+                className="px-3 py-1.5 bg-white/20 backdrop-blur-lg border border-white/30 rounded-full text-xs font-semibold uppercase tracking-wide"
               >
-                {project.concept}
-              </motion.p>
+                {project.phase.replace('_', ' ')}
+              </motion.span>
             </div>
-          </div>
-        </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-5xl md:text-6xl font-bold mb-4 leading-tight"
+            >
+              {project.title}
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-2xl text-blue-100 mb-6 leading-relaxed"
+            >
+              {project.concept}
+            </motion.p>
+
+            {project.estimated_time && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="flex items-center gap-6 text-blue-100"
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">{project.estimated_time} minutes</span>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        </div>
+
+        {/* Wave Divider */}
+        <div className="relative">
+          <svg className="w-full h-16 fill-current text-gray-50" viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" />
+          </svg>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-8 -mt-8">
 
         {/* Progress Card */}
         {progress && (
@@ -465,11 +496,23 @@ export default function ProjectDetailPage() {
               </div>
             </motion.div>
 
-            {/* Next Steps */}
+            {/* Setup Instructions */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.5 }}
+            >
+              <SetupInstructions
+                projectTitle={project.title}
+                projectNumber={project.project_number}
+              />
+            </motion.div>
+
+            {/* Next Steps */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.6 }}
               className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm"
             >
               <h2 className="text-2xl font-semibold mb-4">Next Steps</h2>
@@ -496,7 +539,7 @@ export default function ProjectDetailPage() {
                     key={idx}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 + idx * 0.1 }}
+                    transition={{ delay: 0.7 + idx * 0.1 }}
                     whileHover={{ x: 5 }}
                     className="flex items-start"
                   >

@@ -23,6 +23,7 @@ module.exports = {
       },
       fontFamily: {
         sans: [
+          'var(--font-inter)',
           'ui-sans-serif',
           'system-ui',
           '-apple-system',
@@ -39,6 +40,7 @@ module.exports = {
           '"Noto Color Emoji"',
         ],
         mono: [
+          'var(--font-mono)',
           'ui-monospace',
           'SFMono-Regular',
           'Menlo',
