@@ -12,7 +12,7 @@ class CodeExecution(Base):
     __tablename__ = "code_executions"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     project_id = Column(Integer, ForeignKey("projects.id"), nullable=True)
     
     # Code details
@@ -35,7 +35,5 @@ class CodeExecution(Base):
     project = relationship("Project")
 
 
-# Add relationship to User model
-from app.models.user import User
-User.code_executions = relationship("CodeExecution", back_populates="user", cascade="all, delete-orphan")
+# Relationship defined in user model
 

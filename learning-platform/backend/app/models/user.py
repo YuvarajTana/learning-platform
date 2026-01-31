@@ -20,4 +20,5 @@ class User(Base):
 
     # Relationships
     progress = relationship("UserProgress", back_populates="user", cascade="all, delete-orphan")
+    code_executions = relationship("CodeExecution", back_populates="user", cascade="all, delete-orphan")
 

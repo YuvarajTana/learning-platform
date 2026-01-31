@@ -227,16 +227,35 @@ class CodeExecutor:
             with open(code_file, "w") as f:
                 f.write(code)
             
-            # Execute locally
-            cmd = [config["command"], code_file]
+            # Execute locally - handle Windows vs Unix commands
+            import platform
+            if platform.system() == "Windows" and config["command"] == "python":
+                # On Windows, try both 'python' and 'py' commands
+                cmd = ["py", code_file]
+            else:
+                cmd = [config["command"], code_file]
             
-            process = await asyncio.create_subprocess_exec(
-                *cmd,
-                stdin=asyncio.subprocess.PIPE if stdin else None,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                cwd=temp_dir
-            )
+            try:
+                process = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdin=asyncio.subprocess.PIPE if stdin else None,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    cwd=temp_dir
+                )
+            except FileNotFoundError:
+                # If the first command fails, try the alternative on Windows
+                if platform.system() == "Windows" and config["command"] == "python":
+                    cmd = ["python", code_file]
+                    process = await asyncio.create_subprocess_exec(
+                        *cmd,
+                        stdin=asyncio.subprocess.PIPE if stdin else None,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE,
+                        cwd=temp_dir
+                    )
+                else:
+                    raise
             
             try:
                 stdout, stderr = await asyncio.wait_for(

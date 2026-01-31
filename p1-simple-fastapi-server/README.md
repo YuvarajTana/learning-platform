@@ -44,6 +44,21 @@ p1-simple-fastapi-server/
 └── README.md           # This file
 ```
 
+## Interactive Annotated Code Example
+
+You can now view an interactive, annotated explanation of the main FastAPI server code:
+
+- **If using Next.js/React frontend:**
+   1. Import and use the `AnnotatedCodePage` component from `annotated-code.tsx` in your app or route.
+   2. Or, render `<FastApiAnnotatedDemo />` directly in any React page.
+
+- **Component location:**
+   - `FastApiAnnotatedDemo.tsx` (renders the annotated code block)
+   - `annotated-code.tsx` (standalone page for the annotated code)
+   - `fastapiCodeExample.ts` (contains code and annotation data)
+
+This makes it easy to reuse the annotated code explanation in this and other projects!
+
 ## Setup Instructions
 
 1. **Create and activate virtual environment** (recommended):
