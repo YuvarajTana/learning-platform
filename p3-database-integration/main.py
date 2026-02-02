@@ -5,14 +5,11 @@ from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime
 from pydantic import BaseModel
 import uvicorn
-
 # Database setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///./items.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
-
 # Database Model
 class Item(Base):
     """
@@ -20,39 +17,27 @@ class Item(Base):
     This maps to the 'items' table.
     """
     __tablename__ = "items"
-
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     description = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
-
-
 # Create tables
 Base.metadata.create_all(bind=engine)
-
-
 # Pydantic models for request/response
 class ItemCreate(BaseModel):
     """Schema for creating a new item"""
     name: str
     description: str | None = None
-
-
 class ItemResponse(BaseModel):
     """Schema for item response"""
     id: int
     name: str
     description: str | None
     created_at: datetime
-
     class Config:
         from_attributes = True
-
-
 # FastAPI app
 app = FastAPI(title="Database Integration API", version="1.0.0")
-
-
 # Dependency to get database session
 def get_db():
     """
@@ -64,10 +49,7 @@ def get_db():
         yield db
     finally:
         db.close()
-
-
 # API Endpoints
-
 @app.get("/")
 def read_root():
     """Root endpoint with API information"""
@@ -82,8 +64,6 @@ def read_root():
             "DELETE /items/{id}": "Delete an item"
         }
     }
-
-
 @app.get("/items", response_model=list[ItemResponse])
 def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
@@ -92,8 +72,6 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     items = db.query(Item).offset(skip).limit(limit).all()
     return items
-
-
 @app.get("/items/{item_id}", response_model=ItemResponse)
 def read_item(item_id: int, db: Session = Depends(get_db)):
     """
@@ -104,8 +82,6 @@ def read_item(item_id: int, db: Session = Depends(get_db)):
     if item is None:
         raise HTTPException(status_code=404, detail="Item not found")
     return item
-
-
 @app.post("/items", response_model=ItemResponse, status_code=201)
 def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     """
@@ -117,8 +93,6 @@ def create_item(item: ItemCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_item)
     return db_item
-
-
 @app.put("/items/{item_id}", response_model=ItemResponse)
 def update_item(item_id: int, item: ItemCreate, db: Session = Depends(get_db)):
     """
@@ -128,15 +102,12 @@ def update_item(item_id: int, item: ItemCreate, db: Session = Depends(get_db)):
     db_item = db.query(Item).filter(Item.id == item_id).first()
     if db_item is None:
         raise HTTPException(status_code=404, detail="Item not found")
-    
     # Update fields
     db_item.name = item.name
     db_item.description = item.description
     db.commit()
     db.refresh(db_item)
     return db_item
-
-
 @app.delete("/items/{item_id}", status_code=204)
 def delete_item(item_id: int, db: Session = Depends(get_db)):
     """
@@ -150,8 +121,6 @@ def delete_item(item_id: int, db: Session = Depends(get_db)):
     db.delete(db_item)
     db.commit()
     return None
-
-
 # Run the server
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

@@ -6,11 +6,21 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { projectsAPI, progressAPI } from '@/lib/api'
 import CodeSample from '@/components/CodeSample'
+import InteractiveCodeBlock from '@/components/InteractiveCodeBlock'
 import FlowDiagram from '@/components/FlowDiagram'
 import ArchitectureDiagram from '@/components/ArchitectureDiagram'
 import SetupInstructions from '@/components/SetupInstructions'
 import InteractiveExplanation from '@/components/InteractiveExplanation'
 import { projectCodeData } from '@/lib/projectCodeSamples'
+import MultiProjectAnnotatedCode from '@/components/MultiProjectAnnotatedCode'
+import { project1CodeAnnotations } from '@/data/project1.codeAnnotations'
+import { project2CodeAnnotations } from '@/data/project2.codeAnnotations'
+import { project3CodeAnnotations } from '@/data/project3.codeAnnotations'
+import { project4CodeAnnotations } from '@/data/project4.codeAnnotations'
+import { project5CodeAnnotations } from '@/data/project5.codeAnnotations'
+import { useRef } from 'react'
+import { ProjectVisualizationRenderer } from '@/components/ProjectVisualizations'
+
 
 interface Project {
   id: number
@@ -36,14 +46,44 @@ interface Progress {
   completed_at: string | null
 }
 
+interface CodeSampleType {
+  title: string
+  language: string
+  code: string
+  explanation: string
+  annotations?: Array<{
+    line: number
+    label: string
+    explanation: string
+    color?: string
+  }>
+}
+
+interface ProjectCodeData {
+  codeSamples: CodeSampleType[]
+  flowSteps: Array<{ id: string; title: string; description: string }>
+  architecture?: {
+    components: Array<{ id: string; name: string; description: string; color: string; position: { x: number; y: number } }>
+    connections: Array<{ from: string; to: string }>
+  }
+}
+
 export default function ProjectDetailPage() {
   const params = useParams()
   const router = useRouter()
   const projectId = parseInt(params.id as string)
-  
+  const sidebarRef = useRef<HTMLDivElement | null>(null)
+
   const [project, setProject] = useState<Project | null>(null)
   const [progress, setProgress] = useState<Progress | null>(null)
   const [loading, setLoading] = useState(true)
+  const [selectedAnnotation, setSelectedAnnotation] = useState<{
+    annotation: {
+      label: string
+      explanation: string
+    }  
+    y: number
+  } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -61,7 +101,8 @@ export default function ProjectDetailPage() {
       })
       .catch((err) => {
         console.error('Error fetching project:', err)
-        if (err.response?.status === 404) {
+        const statusCode = err?.response?.status || err?.status;
+        if (statusCode === 404) {
           setError('Project not found')
         } else {
           setError('Failed to load project. Please try again.')
@@ -69,18 +110,21 @@ export default function ProjectDetailPage() {
         setLoading(false)
       })
 
-    // Try to fetch progress (may fail if not logged in)
-    progressAPI.get(projectId)
-      .then((response) => {
-        setProgress(response.data)
-      })
-      .catch((err) => {
-        // Progress not found or not logged in - that's okay
-        // Only log if it's not a 404 or 401
-        if (err.response?.status !== 404 && err.response?.status !== 401) {
-          console.error('Error fetching progress:', err)
-        }
-      })
+    // Only fetch progress if user is logged in
+    const token = localStorage.getItem("access_token")
+    if (token) {
+      progressAPI.get(projectId)
+        .then((response) => {
+          setProgress(response.data)
+        })
+        .catch((err) => {
+          // Progress not found - that's okay
+          const statusCode = err?.response?.status || err?.status;
+          if (statusCode !== 404) {
+            console.error('Error fetching progress:', err)
+          }
+        })
+    }
   }, [projectId])
 
   const getDifficultyColor = (difficulty: string) => {
@@ -217,10 +261,23 @@ export default function ProjectDetailPage() {
   }
 
   // Get code samples and flow data for this project
-  const codeData = projectCodeData[project.project_number] || {
+  const codeData: ProjectCodeData = projectCodeData[project.project_number] || {
     codeSamples: [],
     flowSteps: [],
     architecture: undefined,
+  }
+  let annotatedCode = null
+
+  if (project.project_number === 1) {
+    annotatedCode = project1CodeAnnotations
+  } else if (project.project_number === 2) {
+    annotatedCode = project2CodeAnnotations
+  }else if (project.project_number === 3) {
+    annotatedCode = project3CodeAnnotations
+  } else if (project.project_number === 4) {
+    annotatedCode = project4CodeAnnotations
+  } else if (project.project_number === 5) {
+    annotatedCode = project5CodeAnnotations
   }
 
   return (
@@ -373,40 +430,67 @@ export default function ProjectDetailPage() {
                 {project.description || 'No description available for this project.'}
               </p>
             </motion.div>
-
+            
             {/* Code Samples Section */}
-            {codeData.codeSamples.length > 0 && (
+            {annotatedCode ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
-                className="space-y-6"
+                className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm"
               >
-                <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <h2 className="text-2xl font-semibold mb-6">Code Examples</h2>
-                  <div className="space-y-6">
-                    {codeData.codeSamples.map((sample, idx) => (
-                      <motion.div
-                        key={idx}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.2 + idx * 0.1 }}
-                      >
-                        <CodeSample
-                          code={sample.code}
-                          language={sample.language}
-                          title={sample.title}
-                          explanation={sample.explanation}
-                        />
+                <h2 className="text-2xl font-semibold mb-6">Code Examples</h2>  
+                <MultiProjectAnnotatedCode
+                  code={annotatedCode.code}
+                  annotations={annotatedCode.annotations}
+                  onSelect={setSelectedAnnotation}
+                />
+              </motion.div>
+            ) : (
+              codeData.codeSamples.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  className="space-y-6"
+                >
+                  <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                    <h2 className="text-2xl font-semibold mb-6">Code Examples</h2>
+
+                    <div className="space-y-6">
+                      {codeData.codeSamples.map((sample: CodeSampleType, idx: number) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.2 + idx * 0.1 }}
+                        >
+                          {sample.annotations && sample.annotations.length > 0 ? (
+                            <InteractiveCodeBlock
+                              code={sample.code}
+                              language={sample.language}
+                              title={sample.title}
+                              annotations={sample.annotations}
+                            />
+                          ) : (
+                            <CodeSample
+                              code={sample.code}
+                              language={sample.language}
+                              title={sample.title}
+                              explanation={sample.explanation}
+                            />
+                        )}
                       </motion.div>
                     ))}
                   </div>
                 </div>
               </motion.div>
-            )}
+            )
+          )}
+
 
             {/* Flow Diagram Section */}
-            {codeData.flowSteps && codeData.flowSteps.length > 0 && (
+            {/* codeData.flowSteps && codeData.flowSteps.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -417,10 +501,10 @@ export default function ProjectDetailPage() {
                   title="Implementation Flow"
                 />
               </motion.div>
-            )}
+            )} */}
 
             {/* Architecture Diagram Section */}
-            {codeData.architecture && (
+            {/* codeData.architecture && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -432,7 +516,7 @@ export default function ProjectDetailPage() {
                   title="System Architecture"
                 />
               </motion.div>
-            )}
+            )} */}
 
             {/* Learning Objectives */}
             <motion.div
@@ -466,6 +550,17 @@ export default function ProjectDetailPage() {
                   </motion.li>
                 ))}
               </ul>
+            </motion.div>
+
+            {/* System Architecture Visualization */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.4 }}
+              className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm"
+            >
+              <h2 className="text-2xl font-semibold mb-4">System Architecture Visualization</h2>
+              <ProjectVisualizationRenderer projectId={project.project_number} />
             </motion.div>
 
             {/* Real-World Applications */}
@@ -558,9 +653,45 @@ export default function ProjectDetailPage() {
               </div>
             </motion.div>
           </div>
+          
+
 
           {/* Right Column - Sidebar */}
-          <div className="space-y-6">
+          <div ref={sidebarRef} className="space-y-6 relative">
+            {/* Contextual Code Explanation */}
+            {selectedAnnotation && (() => {
+              const sidebarTop =
+                sidebarRef.current?.getBoundingClientRect().top ?? 0
+
+              const sidebarAbsoluteTop = sidebarTop + window.scrollY
+
+              const relativeTop =
+                selectedAnnotation.y - sidebarAbsoluteTop
+
+              return (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  style={{
+                    position: 'absolute',
+                    top: relativeTop,
+                    right: 0,
+                    width: '370px',
+                }}
+                className="bg-white border border-blue-200 rounded-lg p-4 shadow-lg z-20"
+              >
+                <h3 className="font-semibold mb-2 text-blue-700">
+                  {selectedAnnotation.annotation.label}
+                </h3>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {selectedAnnotation.annotation.explanation}
+                </p>
+              </motion.div>
+            )
+          })()}
+
+      
             {/* Quick Info */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h3 className="text-lg font-semibold mb-4">Quick Info</h3>
@@ -630,8 +761,8 @@ export default function ProjectDetailPage() {
                       window.location.reload()
                     } catch (err: any) {
                       // Not logged in - redirect to login
-                      if (err.response?.status === 401 || err.response?.status === 403) {
-                        router.push('/login')
+                      if (err.message.includes('401') || err.message.includes('403') || err.response?.status === 401 || err.response?.status === 403) {
+                        router.push('/auth/login')
                       } else {
                         alert('Failed to start project. Please try again.')
                       }

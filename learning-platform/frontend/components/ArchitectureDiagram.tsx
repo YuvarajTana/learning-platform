@@ -8,6 +8,7 @@ interface Component {
   name: string
   description: string
   color: string
+  type: 'user' | 'client' | 'api' | 'server' | 'database' | 'auth'
   position: { x: number; y: number }
 }
 
@@ -35,7 +36,13 @@ export default function ArchitectureDiagram({
         <h3 className="text-xl font-semibold mb-6 text-gray-800">{title}</h3>
       )}
       
-      <div className="relative" style={{ minHeight: '400px' }}>
+      <div
+        className="relative w-full"
+        style={{
+          height: '600px',       // fixed canvas height
+          overflow: 'hidden',    // prevents bleed
+        }}
+      >
         {/* SVG for connections */}
         <svg
           className="absolute inset-0 w-full h-full"
@@ -105,6 +112,9 @@ export default function ArchitectureDiagram({
               }}
             >
               <div className="font-semibold text-white mb-1">{component.name}</div>
+              <div className="text-[10px] tracking-wider uppercase opacity-70 text-white">
+                {component.type}
+              </div>
               {hoveredComponent === component.id && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}

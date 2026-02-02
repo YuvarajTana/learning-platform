@@ -48,9 +48,26 @@ npm run dev
 
 ## Features
 
-- ✅ User authentication
-- ✅ Project management
-- ✅ Progress tracking
-- ✅ Code execution (coming soon)
-- ✅ Community features (coming soon)
+
+## Annotated Code Explanations for All Projects
+
+You can now display annotated code explanations for all 5 projects using a single reusable component:
+
+- **Component:** `MultiProjectAnnotatedCode` (in `frontend/components`)
+- **Data:** `allProjectsAnnotatedCode` (in `frontend/lib`)
+- **Example usage page:** `frontend/app/all-projects-code-examples.tsx`
+
+### How to Use
+
+1. Import the component and data:
+	```tsx
+	import MultiProjectAnnotatedCode from '@/components/MultiProjectAnnotatedCode'
+	import { allProjectsAnnotatedCode } from '@/lib/allProjectsAnnotatedCode'
+	```
+2. Render in your page:
+	```tsx
+	<MultiProjectAnnotatedCode codes={allProjectsAnnotatedCode} />
+	```
+
+This will show a tabbed/code-switcher interface for all 5 projects, with clickable code annotations and explanations for each.
 

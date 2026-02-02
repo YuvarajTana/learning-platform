@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
+import { PlatformArchitectureVisualization } from '@/components/PlatformArchitectureVisualization'
+import ClientOnly from '@/components/ClientOnly'
 
 export default function Home() {
   return (
@@ -191,6 +193,30 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Platform Architecture Visualization */}
+      <div className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.6 }}
+            className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden"
+          >
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Platform Architecture</h2>
+              <p className="text-sm text-gray-600">Explore the system design and components that power our learning platform</p>
+            </div>
+            <div className="p-6">
+              <ClientOnly>
+                <div className="h-[600px]">
+                  <PlatformArchitectureVisualization />
+                </div>
+              </ClientOnly>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
       {/* CTA Section */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -207,13 +233,13 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
-              href="/register"
+              href="/auth/signup"
               className="px-8 py-4 bg-white text-primary-600 rounded-xl font-semibold hover:bg-gray-100 transition-all duration-200 shadow-lg"
             >
               Create Account
             </Link>
             <Link
-              href="/login"
+              href="/auth/login"
               className="px-8 py-4 bg-primary-700 text-white rounded-xl font-semibold border-2 border-white/20 hover:bg-primary-800 transition-all duration-200"
             >
               Sign In

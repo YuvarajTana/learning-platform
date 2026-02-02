@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Security
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -7,10 +7,11 @@ from app.core.security import verify_password, get_password_hash, create_access_
 from app.core.config import settings
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse, Token
-
 router = APIRouter()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
-
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/token",
+    
+)
 
 def get_user_by_username(db: Session, username: str):
     """Get user by username"""
@@ -36,6 +37,7 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
+    
     """Get current authenticated user"""
     from app.core.security import decode_access_token
     from jose import JWTError
@@ -58,6 +60,44 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     return user
+
+
+async def get_current_user_optional(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Return current user if token is valid,
+    otherwise return None (no authentication required)
+    """
+    from fastapi.security.utils import get_authorization_scheme_param
+    from app.core.security import decode_access_token
+    from jose import JWTError
+    
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return None
+    
+    scheme, param = get_authorization_scheme_param(auth_header)
+    if scheme.lower() != "bearer":
+        return None
+    
+    try:
+        payload = decode_access_token(param)
+        if payload is None:
+            return None
+        
+        username: str = payload.get("sub")
+        if not username:
+            return None
+        
+        user = get_user_by_username(db, username=username)
+        if user is None:
+            return None
+        return user
+    except Exception:
+        # If any error occurs (e.g., invalid token), return None
+        return None
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -104,7 +144,8 @@ async def login(
         )
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.username}, 
+        expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
 

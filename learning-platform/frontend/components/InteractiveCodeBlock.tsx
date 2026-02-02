@@ -27,6 +27,7 @@ export default function InteractiveCodeBlock({
 }: InteractiveCodeBlockProps) {
   const [activeAnnotation, setActiveAnnotation] = useState<number | null>(null)
   const [hoveredLine, setHoveredLine] = useState<number | null>(null)
+  const [showAnnotations, setShowAnnotations] = useState(true)
 
   const codeLines = code.split('\n')
 
@@ -59,9 +60,9 @@ export default function InteractiveCodeBlock({
 
       <div className="flex">
         {/* Code Area */}
-        <div className="flex-1 bg-gray-900">
+        <div className={`${showAnnotations ? 'flex-[2]' : 'flex-[3]'} bg-gray-900`}>
           <div className="p-6 overflow-x-auto">
-            <pre className="font-mono text-sm">
+            <pre className="font-mono text-xs sm:text-sm whitespace-pre">
               {codeLines.map((line, index) => {
                 const lineNum = index + 1
                 const lineAnnotations = getAnnotationsForLine(lineNum)
@@ -82,7 +83,7 @@ export default function InteractiveCodeBlock({
                   >
                     {/* Line Number */}
                     <span className={`
-                      select-none w-8 text-right flex-shrink-0 transition-colors duration-200
+                      select-none w-7 text-right flex-shrink-0 transition-colors duration-200
                       ${isHovered ? 'text-primary-400' : 'text-gray-500'}
                     `}>
                       {lineNum}
@@ -135,17 +136,38 @@ export default function InteractiveCodeBlock({
         </div>
 
         {/* Annotations Panel */}
-        <div className="w-80 bg-gray-50 border-l border-gray-200 flex flex-col">
-          <div className="px-4 py-3 bg-gray-100 border-b border-gray-200">
+        <div className={`${showAnnotations ? 'w-full md:w-96' : 'hidden'} bg-gray-50 border-t md:border-t-0 md:border-l border-gray-200 flex flex-col min-h-[200px]`}>
+          <div className="px-4 py-3 bg-gray-100 border-b border-gray-200 flex justify-between items-center">
             <h4 className="font-semibold text-gray-900 flex items-center gap-2">
               <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Explanations
             </h4>
+            <button 
+              onClick={() => setShowAnnotations(false)}
+              className="text-gray-500 hover:text-gray-700 md:hidden"
+              aria-label="Hide annotations panel"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="px-4 py-2 border-b border-gray-200 bg-gray-100">
+            <button 
+              onClick={() => setShowAnnotations(false)}
+              className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Hide panel
+            </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4 max-h-[50vh]">
             <AnimatePresence mode="wait">
               {activeAnnotation !== null ? (
                 <motion.div
@@ -237,6 +259,20 @@ export default function InteractiveCodeBlock({
             </AnimatePresence>
           </div>
         </div>
+        
+        {!showAnnotations && (
+          <div className="flex items-center justify-center p-4 bg-gray-100 border-l border-gray-200">
+            <button 
+              onClick={() => setShowAnnotations(true)}
+              className="text-sm text-gray-600 hover:text-gray-800 flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              Show explanations
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

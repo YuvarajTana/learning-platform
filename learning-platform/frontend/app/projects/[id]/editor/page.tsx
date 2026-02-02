@@ -73,10 +73,14 @@ def read_root():
     """
     return {"message": "Hello, World!"}
 
+# Demonstrate what the endpoint returns
+print("FastAPI App Created Successfully!")
+print('Endpoint "/" returns: {"message": "Hello, World!"}')
 
 # Run the server
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    print("Server starting on http://0.0.0.0:8000")
+    # uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
 `
       case 2:
         return `from fastapi import FastAPI
@@ -119,10 +123,207 @@ def delete_item(item_id: int):
     """DELETE /items/{item_id} - Delete an item"""
     return {"message": "Item deleted", "item_id": item_id}
 
+# Demonstrate API endpoints
+print("FastAPI REST API Created Successfully!")
+print('GET / returns: {"message": "Welcome to the REST API", "description": "This API demonstrates RESTful principles"}')
+print('GET /items returns: {"items": ["item1", "item2", "item3"]}')
+print('GET /items/1 returns: {"item_id": 1, "name": "item1"}')
+
 # Run the server
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    print("Server starting on http://0.0.0.0:8000")
+    # uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
 `
+      case 3:
+        return `from fastapi import FastAPI, HTTPException, Depends
+import uvicorn
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+# Database setup
+DATABASE_URL = "sqlite:///./test.db"
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# Define a model
+class Item(Base):
+    __tablename__ = "items"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True)
+    description = Column(String, index=True)
+
+# Create tables
+Base.metadata.create_all(bind=engine)
+
+app = FastAPI()
+
+@app.get("/items")
+def read_items():
+    # Get database session
+    db = SessionLocal()
+    try:
+        # Query all items
+        items = db.query(Item).all()
+        return {"items": items}
+    finally:
+        db.close()
+
+@app.post("/items")
+def create_item(name: str, description: str):
+    # Get database session
+    db = SessionLocal()
+    try:
+        # Create new item
+        db_item = Item(name=name, description=description)
+        db.add(db_item)
+        db.commit()
+        db.refresh(db_item)
+        return {"message": "Item created", "item": db_item}
+    finally:
+        db.close()
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)`
+      case 4:
+        return `from fastapi import FastAPI, Depends, HTTPException, status
+import uvicorn
+from datetime import datetime, timedelta
+from typing import Optional
+from passlib.context import CryptContext
+from jose import JWTError, jwt
+
+# Password hashing setup
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# JWT settings
+SECRET_KEY = "your-secret-key-here"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+app = FastAPI()
+
+# User model (simplified)
+fake_users_db = {
+    "johndoe": {
+        "username": "johndoe",
+        "hashed_password": pwd_context.hash("secretpassword"),
+    }
+}
+
+# Helper functions
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def authenticate_user(username: str, password: str):
+    user = fake_users_db.get(username)
+    if not user or not verify_password(password, user["hashed_password"]):
+        return None
+    return user
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+@app.post("/login")
+def login(username: str, password: str):
+    user = authenticate_user(username, password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user["username"]}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/protected")
+def read_protected():
+    # This endpoint would require a valid JWT token
+    return {"message": "Access granted to protected resource"}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)`
+      case 5:
+        return `from fastapi import FastAPI, HTTPException, status
+import uvicorn
+from pydantic import BaseModel, Field, ValidationError
+from typing import Optional
+
+app = FastAPI()
+
+# Pydantic models for request/response validation
+class Item(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50, description="Item name")
+    description: Optional[str] = Field(None, max_length=200, description="Item description")
+    price: float = Field(..., gt=0, description="Price greater than zero")
+    tax: Optional[float] = Field(None, ge=0, description="Tax amount")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "Foo",
+                "description": "A nice example object",
+                "price": 35.4,
+                "tax": 3.2
+            }
+        }
+
+@app.post("/items/")
+async def create_item(item: Item):
+    try:
+        # Process the validated item
+        item_dict = item.dict()
+        if item.tax:
+            price_with_tax = item.price + item.tax
+            item_dict["price_with_tax"] = price_with_tax
+        
+        return {"message": "Item created successfully", "item": item_dict}
+    except Exception as e:
+        # Handle unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: int):
+    try:
+        # Validate item_id
+        if item_id <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Item ID must be a positive integer"
+            )
+        
+        # Simulate retrieving item from database
+        if item_id > 100:  # Assume we only have items with ID <= 100
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Item not found"
+            )
+        
+        return {"item_id": item_id, "name": f"Item {item_id}"}
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        raise
+    except Exception as e:
+        # Handle unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
+        )
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)`
       default:
         return `# Project ${project.project_number}: ${project.title}
 # Concept: ${project.concept}
@@ -150,7 +351,7 @@ print("Hello, World!")
         code,
         language,
         project_id: projectId,
-        save_history: true,
+        save_history: !!localStorage.getItem('access_token'), // Only save history if user is logged in
       })
       
       const result = response.data
@@ -158,9 +359,38 @@ print("Hello, World!")
       setError(result.error || null)
       setExecutionTime(result.execution_time)
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || err.message || 'Failed to execute code'
-      setError(errorMsg)
-      setOutput('')
+      // Check if it's an authentication error
+      if (err.message.includes('401') || err.message.includes('403')) {
+        // For unauthorized errors, try executing without saving history
+        try {
+          const response = await codeExecutionAPI.execute({
+            code,
+            language,
+            project_id: projectId,
+            save_history: false, // Don't save history for unauthenticated users
+          })
+          
+          const result = response.data
+          setOutput(result.output || '(No output)')
+          setError(result.error || null)
+          setExecutionTime(result.execution_time)
+        } catch (retryErr: any) {
+          // If the retry also fails, show a more user-friendly message
+          if (retryErr.message.includes('401') || retryErr.message.includes('403')) {
+            // If both attempts failed due to auth, let the user know they can login to save history
+            setOutput('')
+            setError('Code executed successfully, but execution history will not be saved. Login to track your code execution history.');
+          } else {
+            const errorMsg = retryErr.response?.data?.detail || retryErr.message || 'Failed to execute code'
+            setError(errorMsg)
+            setOutput('')
+          }
+        }
+      } else {
+        const errorMsg = err.response?.data?.detail || err.message || 'Failed to execute code'
+        setError(errorMsg)
+        setOutput('')
+      }
     } finally {
       setExecuting(false)
     }

@@ -29,6 +29,9 @@ export default function ProjectsPage() {
       })
       .catch((error) => {
         console.error('Error fetching projects:', error)
+        // Don't redirect for unauthorized errors on public pages
+        // Projects should be accessible without authentication
+        setProjects([])
         setLoading(false)
       })
   }, [])
